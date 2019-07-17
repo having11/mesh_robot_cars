@@ -1,0 +1,30 @@
+body{
+    height: 600px;
+    height: 400px;
+}
+
+#option_container{
+    height: 33%;
+}
+
+#action_container{
+    height: 66%;
+    margin: 100px;
+}
+
+#d-pad{
+    width: 150px;
+    height: 150px;
+}
+
+#servo_container{
+    width: 150px;
+    height: 150px;
+}
+
+#laser_btn{
+    width: 120px;
+    height: 120px;
+    margin-left: 30px;
+    margin-right: 30px;
+}

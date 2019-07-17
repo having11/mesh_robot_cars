@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Robot Car Battles</title>
+        <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="page_styles.css">
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script>
+            const url = 'http://192.168.0.62/cars';
+            const servo_X_min = 0, servo_X_max = 180, servo_Y_min = 60, servo_Y_max = 120;
+            var laser_state = 0;
+            var servoX_deg = 90;
+            var servoY_deg = 90;
+            function drive(direction){
+                console.log('UID: ', $('#uid :selected').val(), 'direction: ', direction);
+                $.post(url,{
+                    uid: $('#uid :selected').val(),
+                    command: "drive",
+                    value: direction,
+                    dataType: "application/x-www-form-urlencoded"
+                },
+                function(data, status){
+                    console.log("Data: ", data);
+                });
+            }
+            function change_name(){
+                var name = document.getElementById("name_box").value;
+                $.post(url,{
+                    uid: $('#uid :selected').val(),
+                    command: "name",
+                    value: name
+                },
+                function(data, status){
+                    console.log("Data: ", data);
+                });
+            }
+
+            function start_match(){
+                $.post(url,{
+                    uid: $('#uid :selected').val(),
+                    command: "start",
+                    value: "begin"
+                },
+                function(data, status){
+                    console.log("Data: ", data);
+                });
+            }
+
+            function end_match(){
+                $.post(url,{
+                    uid: $('#uid :selected').val(),
+                    command: "end",
+                    value: "over"
+                },
+                function(data, status){
+                    console.log("Data: ", data);
+                });
+            }
+
+            function laser_toggle(){
+                if(laser_state){
+                    laser_state = 0;
+                    document.getElementById("laser_btn").classList.remove('w3-red');
+                    document.getElementById("laser_btn").classList.add('w3-gray');
+                }
+                else{
+                    laser_state = 1;
+                    document.getElementById("laser_btn").classList.add('w3-red');
+                    document.getElementById("laser_btn").classList.remove('w3-gray');
+                }
+                
+                $.post(url,{
+                    uid: $('#uid :selected').val(),
+                    command: "laser",
+                    value: laser_state
+                },
+                function(data, status){
+                    console.log("Data: ", data);
+                });
+            }
+
+            function free_mode(){
+                $.post(url,{
+                    uid: $('#uid :selected').val(),
+                    command: "free",
+                    value: "be free"
+                },
+                function(data, status){
+                    console.log("Data: ", data);
+                });
+            }
+
+            function servo_set(servo1, servo2){
+                $.post(url,{
+                    uid: $('#uid :selected').val(),
+                    command: "servo",
+                    value: zeroPad(servo1,3)+zeroPad(servo2,3)
+                },
+                function(data, status){
+                    console.log("Data: ", data);
+                });
+                document.getElementById("ServoXLabel").innerHTML = "Servo X degree: " + servoX_deg; 
+                document.getElementById("ServoYLabel").innerHTML = "Servo Y degree: " + servoY_deg;
+            }
+
+            function change_color(){
+                var color_picker = document.getElementById("color_pick");
+                console.log(color_picker.value);
+                $.post(url,{
+                    uid: $('#uid :selected').val(),
+                    command: "color",
+                    value: color_picker.value.replace('#','')
+                },
+                function(data, status){
+                    console.log("Data: ", data);
+                });
+            }
+
+            var timeout;
+            $(document).ready(function(e){
+            $('#forward_btn').bind('mousedown touchstart', function(event){
+                timeout = setInterval(function(){
+                    drive('forward');
+                }, 250);
+                return false;
+            });
+            $('#right_btn').bind('mousedown touchstart', function(event){
+                timeout = setInterval(function(){
+                    drive('right');
+                }, 250);
+                return false;
+            });
+            $('#back_btn').bind('mousedown touchstart', function(event){
+                timeout = setInterval(function(){
+                    drive('back');
+                }, 250);
+                return false;
+            });
+            $('#left_btn').bind('mousedown touchstart', function(event){
+                timeout = setInterval(function(){
+                    drive('left');
+                }, 250);
+                return false;
+            });
+            $('#ServoXInc').bind('mousedown touchstart', function(event){
+                timeout = setInterval(function(){
+                    if(servoX_deg < servo_X_max){
+                        servoX_deg += 5;
+                        servo_set(servoX_deg, servoY_deg);
+                    }
+                }, 300);
+                return false;
+            });
+            $('#ServoXDec').bind('mousedown touchstart', function(event){
+                timeout = setInterval(function(){
+                    if(servoX_deg > servo_X_min){
+                        servoX_deg -= 5;
+                        servo_set(servoX_deg, servoY_deg);
+                    }
+                }, 300);
+                return false;
+            });
+            $('#ServoYInc').bind('mousedown touchstart', function(event){
+                timeout = setInterval(function(){
+                    if(servoY_deg < servo_Y_max){
+                        servoY_deg += 5;
+                        servo_set(servoX_deg, servoY_deg);
+                    }
+                }, 300);
+                return false;
+            });
+            $('#ServoYDec').bind('mousedown touchstart', function(event){
+                timeout = setInterval(function(){
+                    if(servoY_deg > servo_Y_min){
+                        servoY_deg -= 5;
+                        servo_set(servoX_deg, servoY_deg);
+                    }
+                }, 300);
+                return false;
+            });
+            $("#forward_btn").bind('mouseup touchend', function(){
+                clearInterval(timeout);
+                return false;
+            });
+            $("#back_btn").bind('mouseup touchend', function(){
+                clearInterval(timeout);
+                return false;
+            });
+            $("#right_btn").bind('mouseup touchend', function(){
+                clearInterval(timeout);
+                return false;
+            });
+            $("#left_btn").bind('mouseup touchend', function(){
+                clearInterval(timeout);
+                return false;
+            });
+            $("#ServoXInc").bind('mouseup touchend', function(){
+                clearInterval(timeout);
+                return false;
+            });
+            $("#ServoXDec").bind('mouseup touchend', function(){
+                clearInterval(timeout);
+                return false;
+            });
+            $("#ServoYDec").bind('mouseup touchend', function(){
+                clearInterval(timeout);
+                return false;
+            });
+            $("#ServoYInc").bind('mouseup touchend', function(){
+                clearInterval(timeout);
+                return false;
+            });
+            });
+            function zeroPad(num, places) {
+            var zero = places - num.toString().length + 1;
+            return Array(+(zero > 0 && zero)).join("0") + num;
+            }
+        </script>
+    </head>
+    <body>
+        <div id="option-container" class="w3-margin">
+        <div id="select-container" class="w3-row">
+        <div class="w3-col s3 w3-left">
+        <select name="Cars" id="uid" class="w3-select w3-border"> 
+            <option value="CAR1">Car 1</option>
+            <option value="CAR2">Car 2</option>
+            <option value="CAR3">Car 3</option>
+        </select>
+        </div>
+        <div class="w3-col s4 w3-right">
+        <input type="color" class="w3-input" id="color_pick"><label for="color_pick">Choose a color</label>
+        <button type="button" class="w3-button w3-white w3-border w3-medium" onclick="change_color(); return false">Change the color</button>
+        </div>
+        </div>
+        <div id="button-container" class="w3-row w3-margin">
+        <input type="text" id="name_box">
+        <button type="button" class="w3-button w3-white w3-border w3-medium" onclick="change_name();return false">Change name</button>
+        <button type="button" class="w3-button w3-white w3-border w3-medium" onclick="start_match();return false">Start match</button>
+        <button type="button" class="w3-button w3-white w3-border w3-medium" onclick="end_match();return false">End match</button>
+        <button type="button" class="w3-button w3-white w3-border w3-medium" onclick="free_mode();return false">Start free mode</button>
+        </div>
+        </div>
+        <div id="action-container" class="w3-row w3-margin">
+        <div id="servo_container" class="w3-display-container w3-col s4">
+            <button type="button" id="ServoXInc" class="w3-xlarge w3-display-right w3-button w3-black">X+</button>
+            <button type="button" id="ServoXDec" class="w3-xlarge w3-display-left w3-button w3-black">X-</button>
+            
+            <button type="button" id="ServoYInc" class="w3-xlarge w3-display-topmiddle w3-button w3-black">Y+</button>
+            <button type="button" id="ServoYDec" class="w3-xlarge w3-display-bottommiddle w3-button w3-black">Y-</button>
+            
+        </div>
+        <button type="button" id="laser_btn" class="w3-button w3-xlarge w3-gray w3-circle w3-col s4" onclick="laser_toggle();return false">LASER</button>
+        <div id="d-pad" class="w3-display-container w3-col s4">
+        <div id="forward"><button type="button" id="forward_btn" class="w3-xlarge w3-display-topmiddle w3-button w3-black">&#8593;</button></div>
+        <div id="right"><button type="button" id="right_btn" class="w3-xlarge w3-display-right w3-button w3-black">&#8594;</button></div>
+        <div id="backward"><button type="button" id="back_btn" class="w3-xlarge w3-display-bottommiddle w3-button w3-black">&#8595;</button></div>
+        <div id="left"><button type="button" id="left_btn" class="w3-xlarge w3-display-left w3-button w3-black">&#8592;</button></div>
+        </div>
+        </div>
+        <div class="w3-row">
+            <div class="w3-col s4">
+                <label for="ServoXDec" id="ServoXLabel">Current X degree: 90</label><br>
+                <label for="ServoXDec" id="ServoYLabel">Current Y degree: 90</label>
+            </div>
+        </div>
+        <script>
+        
+        </script>
+    </body>
+</html>
