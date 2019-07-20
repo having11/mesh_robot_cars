@@ -92,13 +92,16 @@ void handle_out(const char* event, const char* data){
   if(data == cars_alive.car3_uid){
     cars_alive.car3 = false;
   }
-  if(cars_alive.num_alive==1){
+  if(cars_alive.num_alive<=1){
     const char* used_uid;
     if(cars_alive.car1){
       used_uid = cars_alive.car1_uid;
     }
     else if(cars_alive.car2){
       used_uid = cars_alive.car2_uid;
+    }
+	else if(cars_alive.car3){
+      used_uid = cars_alive.car3_uid;
     }
     Mesh.publish("GAME", used_uid);
     cars_alive.num_alive = 3;

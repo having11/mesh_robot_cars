@@ -9,13 +9,13 @@
 #include "RoboCar.h"
 //SYSTEM_THREAD(ENABLED);
 
-#define UID "CAR2" //Change for each car
+#define UID "CAR3" //Change for each car
 
 RoboCar car = RoboCar();
 
 void setup() {
   Serial.begin(115200);
-  waitFor(Serial.isConnected, 30000);
+  waitFor(Serial.isConnected, 5000);
   waitUntil(Mesh.ready);
   Mesh.subscribe(UID, handle_data);
   Mesh.subscribe("GAME", handle_game_data);

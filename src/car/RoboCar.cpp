@@ -2,6 +2,7 @@
 
 RoboCar::RoboCar(){
     _uid = UID;
+    _name = _uid;
     init_pins();
     display = new U8X8_SSD1306_128X64_NONAME_HW_I2C(U8X8_PIN_NONE);
     pixel = new Adafruit_NeoPixel(1, pins.RGB_LED, WS2812B);
@@ -14,6 +15,11 @@ RoboCar::RoboCar(){
     user_color = pixel->Color(0,0,0);
     pixel->begin();
     pixel->setBrightness(LED_BRIGHTNESS);
+    change_rgb_color(user_color);
+    display->clear();
+    display->drawString(0,0,"Name: "); 
+    display->drawString(6,0,"          ");
+    display->drawString(6,0,_name);
     enter_free_mode();
 }
 
@@ -26,8 +32,9 @@ void RoboCar::start_match(){
 
 bool RoboCar::run(){
     Particle.process();
-    if(!match_running) return 0;
+    //Serial.println(match_running);
     if(check_if_hit()){
+        Serial.println("HIT");
         register_hit();
         delay(10);
     }
@@ -58,13 +65,11 @@ void RoboCar::change_rgb_color(uint32_t color){
 }
 
 void RoboCar::change_rgb_color(String color_str){
-    if(!match_running){
     uint32_t color = strtoul(color_str, NULL, 16);
     user_color = color;
     pixel->setPixelColor(0, color);
     pixel->show();
     Serial.println("User color set");
-    }
 }
 
 void RoboCar::set_laser(bool val){
@@ -79,39 +84,41 @@ void RoboCar::move_laser(int deg_hor, int deg_vert){
 }
 
 bool RoboCar::check_if_hit(){
+    //Serial.printlnf("MAG reading: %i", analogRead(pins.MAGNETOMETER));
+    //Serial.println(match_running);
     if(analogRead(pins.MAGNETOMETER)>=MAG_THRESHOLD) return 1 * hits_enabled;
     return 0;
 }
 
 void RoboCar::enter_free_mode(){
     motors_enabled = true;
-    change_rgb_color(pixel->Color(150, 150, 0));
+    change_rgb_color(user_color);
 }
 
 void RoboCar::drive(int x1, int x2){
     if(motors_enabled){
-        if(!x1){
+        if(!x2){
             analogWrite(pins.MOTOR_IN1, 0);
             analogWrite(pins.MOTOR_IN2, 0);
         }
-        else if (x1 < 0){
+        else if (x2 < 0){
             analogWrite(pins.MOTOR_IN1, 0);
-            analogWrite(pins.MOTOR_IN2, -x1);
+            analogWrite(pins.MOTOR_IN2, -x2);
         }
         else{
-            analogWrite(pins.MOTOR_IN1, x1);
+            analogWrite(pins.MOTOR_IN1, x2);
             analogWrite(pins.MOTOR_IN2, 0);
         }
-        if(!x2){
+        if(!x1){
             analogWrite(pins.MOTOR_IN3, 0);
             analogWrite(pins.MOTOR_IN4, 0);
         }
-        else if (x2 < 0){
+        else if (x1 < 0){
             analogWrite(pins.MOTOR_IN3, 0);
-            analogWrite(pins.MOTOR_IN4, -x2);
+            analogWrite(pins.MOTOR_IN4, -x1);
         }
         else{
-            analogWrite(pins.MOTOR_IN3, x2);
+            analogWrite(pins.MOTOR_IN3, x1);
             analogWrite(pins.MOTOR_IN4, 0);
         }
         delay(250);
@@ -131,9 +138,17 @@ void RoboCar::drive(int x1, int x2){
 void RoboCar::game_over(){
     display->clear();
     display->print("GAME OVER");
+    Mesh.publish("OUT", _uid);
+    match_running = true;
+    motors_enabled = false;
+    hits_enabled = false;
     while(match_running){
         Particle.process();
     }
+    display->clear();
+    display->drawString(0,0,"Name: "); 
+    display->drawString(6,0,"          ");
+    display->drawString(6,0,_name);
     enter_free_mode();
 }
 
@@ -141,8 +156,8 @@ void RoboCar::register_hit(){
     hits_received++;
     motors_enabled = false;
     hits_enabled = false;
-    Mesh.publish("OUT", _uid);
     if(hits_received>=MAX_HITS){
+        hits_received = 0;
         change_rgb_color(pixel->Color(0,0,0));
         game_over();
     }
@@ -152,12 +167,12 @@ void RoboCar::register_hit(){
 }
 
 void RoboCar::disableTimeout(){
-    change_rgb_color(user_color);
+    change_rgb_color(pixel->Color(50,50,0));
     motors_enabled = true;
 }
 
 void RoboCar::cooldownTimeout(){
-    change_rgb_color(pixel->Color(0,250,15));
+    change_rgb_color(user_color);
     hits_enabled = true;
 }
 
@@ -179,6 +194,11 @@ void RoboCar::new_mesh_msg(const char *event, const char *data){
         break;
         case 4: //4
         match_running = false;
+        display->clear();
+        display->drawString(0,0,"Name: "); 
+        display->drawString(6,0,"          ");
+        display->drawString(6,0,_name);
+        enter_free_mode();
         break;
         case 2: //2
         drive(String(data).substring(2,6).toInt(), String(data).substring(6,10).toInt());

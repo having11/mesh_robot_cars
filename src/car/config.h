@@ -1,5 +1,5 @@
-#define HIT_COOLDOWN 4000 //How many ms until robot can register new hit again
-#define HIT_DISABLE 2000 //How many ms the robot will be unable to move once hit
+#define HIT_COOLDOWN 7000 //How many ms until robot can register new hit again
+#define HIT_DISABLE 4000 //How many ms the robot will be unable to move once hit
 #define MAG_THRESHOLD 2500 //0-4095 magnetometer value
 #define MAX_HITS 10 //Number of hits before car becomes disabled
 #define LED_BRIGHTNESS 70 //Number between 0-100 for RGB LED brightness
